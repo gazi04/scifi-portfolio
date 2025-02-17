@@ -11,36 +11,12 @@ scene.background = texture;
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 
-// const alienColorMap = new TextureLoader().load('assets/metalAlien/Metal_Alien_001_COLOR.jpg');
-// const alienNormalMap = new TextureLoader().load('assets/metalAlien/Metal_Alien_001_NRM.jpg');
-// const alienDisplacementMap = new TextureLoader().load('assets/metalAlien/Metal_Alien_001_DISP.png');
-// const alienAoMap = new TextureLoader().load('assets/metalAlien/AO.jpg');
-// const alienSpecularMap = new TextureLoader().load('assets/metalAlien/Metal_Alien_001_SPEC.jpg');
-
-const alienColorMap = new TextureLoader().load('assets/fiberTexture/Stylized_Roof_001_basecolor.png');
-const alienNormalMap = new TextureLoader().load('assets/fiberTexture/Stylized_Roof_001_normal.png');
-const alienDisplacementMap = new TextureLoader().load('assets/fiberTexture/Stylized_Roof_001_height.png');
-const alienAoMap = new TextureLoader().load('assets/fiberTexture/Stylized_Roof_001_ambientOcclusion.jpg');
-const alienSpecularMap = new TextureLoader().load('assets/fiberTexture/Stylized_Roof_001_roughness.png');
-
-const mat = new THREE.TextureLoader().load('assets/fiberTexture/Material_1904.png');
-
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const geometry = new THREE.SphereGeometry(3, 32, 16);
-const material = new THREE.MeshBasicMaterial({map:mat});
-// const material = new THREE.MeshStandardMaterial({
-//   map: alienColorMap,
-//   normalMap: alienNormalMap,
-//   displacementMap: alienDisplacementMap,
-//   displacementScale: 0.1,
-//   aoMap: alienAoMap,
-//   metalnessMap: alienSpecularMap,
-//   metalness: 0.8,
-//   roughness: 0.4
-// });
+const material = new THREE.MeshStandardMaterial({map: new THREE.TextureLoader().load('assets/scifi.jpg')});
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
@@ -50,6 +26,53 @@ scene.add(light);
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
+
+// Create a Raycaster and Mouse Vector
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// List of interactive objects
+const clickableObjects = [];
+const links = [
+  { position: new THREE.Vector3(1, 0, 0), url: "https://example1.com" },
+  { position: new THREE.Vector3(-1, 0.5, 0), url: "https://example2.com" },
+  { position: new THREE.Vector3(0, -1, 1), url: "https://example3.com" },
+];
+
+// Create Markers (Colored Small Spheres)
+links.forEach((link) => {
+  const markerGeometry = new THREE.SphereGeometry(0.07, 16, 16); // Slightly bigger sphere
+  const markerMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff, // Yellow color
+    emissive: 0xffff00, // Glow effect
+    emissiveIntensity: 0.5, // Control glow strength
+  });
+  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+  marker.position.copy(link.position);
+  marker.userData.url = link.url; // Store URL in marker
+
+  scene.add(marker);
+  clickableObjects.push(marker); // Add to clickable list
+});
+
+// Handle Mouse Click
+window.addEventListener("click", (event) => {
+  // Convert mouse position to normalized device coordinates (-1 to +1)
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // Raycast to check for intersections
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(clickableObjects);
+
+  if (intersects.length > 0) {
+    const clickedMarker = intersects[0].object;
+    if (clickedMarker.userData.url) {
+      window.open(clickedMarker.userData.url, "_blank"); // Open link in new tab
+    }
+  }
+});
+
 
 document.addEventListener("keydown", (event) => {
   let rotationAmount = Math.PI / 8;
@@ -72,6 +95,48 @@ document.addEventListener("keydown", (event) => {
       gsap.to(sphere.rotation, { y: sphere.rotation.y + rotationAmount, duration: 0.5, ease: "power1.out" });
       break;
   }
+});
+
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+
+// Mouse Down Event (Start Dragging)
+document.addEventListener("mousedown", (event) => {
+  isDragging = true;
+  previousMousePosition = { x: event.clientX, y: event.clientY };
+});
+
+// Mouse Move Event (Dragging)
+document.addEventListener("mousemove", (event) => {
+  if (!isDragging) return;
+
+  // Calculate mouse movement
+  let deltaX = event.clientX - previousMousePosition.x;
+  let deltaY = event.clientY - previousMousePosition.y;
+
+  // Adjust rotation sensitivity
+  let rotationSpeed = 0.005; 
+
+  // Apply rotation to the sphere
+  gsap.to(sphere.rotation, {
+    y: sphere.rotation.y + deltaX * rotationSpeed, // Rotate around Y-axis
+    x: sphere.rotation.x + deltaY * rotationSpeed, // Rotate around X-axis
+    duration: 0.2, 
+    ease: "power1.out",
+  });
+
+  // Update previous mouse position
+  previousMousePosition = { x: event.clientX, y: event.clientY };
+});
+
+// Mouse Up Event (Stop Dragging)
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+
+// Prevent unwanted text selection while dragging
+document.addEventListener("mouseleave", () => {
+  isDragging = false;
 });
 
 function animate() {
