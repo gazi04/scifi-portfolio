@@ -20,6 +20,16 @@ const material = new THREE.MeshStandardMaterial({map: new THREE.TextureLoader().
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(0.5, 0.5, 0.5),
+  new THREE.MeshStandardMaterial({color: 0xff0000})
+);
+
+cube.position.set(3*Math.cos(0), 3*Math.sin(0), 0.5);
+sphere.add(cube);
+
+sphere.rotateY(175);
+
 const light = new THREE.PointLight(0xffffff, 1.5);
 light.position.set(10, 10, 10);
 scene.add(light);
@@ -27,50 +37,31 @@ scene.add(light);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
-// Create a Raycaster and Mouse Vector
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// List of interactive objects
-const clickableObjects = [];
-const links = [
-  { position: new THREE.Vector3(1, 0, 0), url: "https://example1.com" },
-  { position: new THREE.Vector3(-1, 0.5, 0), url: "https://example2.com" },
-  { position: new THREE.Vector3(0, -1, 1), url: "https://example3.com" },
-];
-
-// Create Markers (Colored Small Spheres)
-links.forEach((link) => {
-  const markerGeometry = new THREE.SphereGeometry(0.07, 16, 16); // Slightly bigger sphere
-  const markerMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffffff, // Yellow color
-    emissive: 0xffff00, // Glow effect
-    emissiveIntensity: 0.5, // Control glow strength
-  });
-  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-  marker.position.copy(link.position);
-  marker.userData.url = link.url; // Store URL in marker
-
-  scene.add(marker);
-  clickableObjects.push(marker); // Add to clickable list
-});
-
-// Handle Mouse Click
+// Listen for mouse clicks
 window.addEventListener("click", (event) => {
   // Convert mouse position to normalized device coordinates (-1 to +1)
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  // Raycast to check for intersections
+  // Set up the raycaster
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(clickableObjects);
+
+  // Check for intersections
+  const intersects = raycaster.intersectObject(cube); // Change `cube` to any object you want
 
   if (intersects.length > 0) {
-    const clickedMarker = intersects[0].object;
-    if (clickedMarker.userData.url) {
-      window.open(clickedMarker.userData.url, "_blank"); // Open link in new tab
-    }
+    intersects[0].object.material.color.set(0xffff00);
   }
+
+  // const clickableObjects = [cube, marker1, marker2]; // Add all objects you want to be clickable
+  // const intersects = raycaster.intersectObjects(clickableObjects);
+  //
+  // if (intersects.length > 0) {
+  //   console.log("Clicked on:", intersects[0].object.name);
+  // }
 });
 
 
