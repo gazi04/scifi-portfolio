@@ -24,6 +24,8 @@ const controls = new OrbitControls( camera, renderer.domElement );
 controls.update();
 
 const loader = new GLTFLoader();
+const alienStation = new AlienStation(scene);
+const stationModel = alienStation.getModel();
 let planetGroup = new THREE.Group();
 scene.add(planetGroup);
 let planet
@@ -31,18 +33,20 @@ loader.load(
   "assets/Jupiter.glb",
   function (gltf) {
     planet = gltf.scene;
-    
+
     planet.position.set(0, -10, 0);
     planet.scale.set(0.1, 0.1, 0.1);
+    planet.name = 'gazi';
     planetGroup.add(planet);
 
-    const alienStation = new AlienStation(scene);
-    const stationModel = alienStation.getModel();
     stationModel.scale.set(0.3, 0.3, 0.3);
     stationModel.rotateZ(-1.5);
     stationModel.position.set(10*Math.cos(0), 10*Math.sin(0), 0.5)
     planetGroup.add(stationModel);
-    
+
+    const boxHelper = new THREE.BoxHelper(stationModel);
+    scene.add(boxHelper);
+
     console.log("GLB Model Loaded!", planet);
   },
   function (xhr) {
@@ -129,8 +133,41 @@ document.addEventListener("keydown", (event) => {
 //   isDragging = false;
 // });
 
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+function onPointerMove(event) {
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 - 1;
+}
+
+// window.addEventListener('pointermove', () => {
+//   onPointerMove();
+//   console.log(pointer.x);
+//   console.log(pointer.y);
+// });
+
+window.addEventListener('click', () => {
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObject(stationModel, true);
+  console.log(intersects);
+
+  if (intersects.length > 0) {
+		intersects[0].object.material.color.set( 0xff0000 );
+    console.log('Object clicked:', intersects[0].object);
+  }
+});
+
 function animate() {
   requestAnimationFrame(animate);
+
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObject(stationModel, true);
+
+  if (intersects.length > 0) {
+    console.log('Hovering over object');
+  }
+
   controls.update();
   renderer.render(scene, camera);
 }
