@@ -29,6 +29,7 @@ const stationModel = alienStation.getModel();
 let planetGroup = new THREE.Group();
 scene.add(planetGroup);
 let planet
+let boxHelper;
 loader.load(
   "assets/Jupiter.glb",
   function (gltf) {
@@ -36,7 +37,6 @@ loader.load(
 
     planet.position.set(0, -10, 0);
     planet.scale.set(0.1, 0.1, 0.1);
-    planet.name = 'gazi';
     planetGroup.add(planet);
 
     stationModel.scale.set(0.3, 0.3, 0.3);
@@ -44,7 +44,7 @@ loader.load(
     stationModel.position.set(10*Math.cos(0), 10*Math.sin(0), 0.5)
     planetGroup.add(stationModel);
 
-    const boxHelper = new THREE.BoxHelper(stationModel);
+    boxHelper = new THREE.BoxHelper(stationModel);
     scene.add(boxHelper);
 
     console.log("GLB Model Loaded!", planet);
@@ -99,74 +99,47 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-// let isDragging = false;
-// let previousMousePosition = { x: 0, y: 0 };
-//
-// document.addEventListener("mousedown", (event) => {
-//   isDragging = true;
-//   previousMousePosition = { x: event.clientX, y: event.clientY };
-// });
-//
-// document.addEventListener("mousemove", (event) => {
-//   if (!isDragging) return;
-//
-//   let deltaX = event.clientX - previousMousePosition.x;
-//   let deltaY = event.clientY - previousMousePosition.y;
-//
-//   let rotationSpeed = 0.005; 
-//
-//   gsap.to(planet.rotation, {
-//     y: planet.rotation.y + deltaX * rotationSpeed,
-//     x: planet.rotation.x + deltaY * rotationSpeed,
-//     duration: 0.2, 
-//     ease: "power1.out",
-//   });
-//
-//   previousMousePosition = { x: event.clientX, y: event.clientY };
-// });
-//
-// document.addEventListener("mouseup", () => {
-//   isDragging = false;
-// });
-//
-// document.addEventListener("mouseleave", () => {
-//   isDragging = false;
-// });
-
+// Raycaster for click detection
 const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
+const mouse = new THREE.Vector2();
 
-function onPointerMove(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 - 1;
-}
+function onMouseClick(event) {
+  // Convert mouse position to normalized device coordinates (-1 to +1)
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-// window.addEventListener('pointermove', () => {
-//   onPointerMove();
-//   console.log(pointer.x);
-//   console.log(pointer.y);
-// });
+  // Update the raycaster with the camera and mouse position
+  raycaster.setFromCamera(mouse, camera);
 
-window.addEventListener('click', () => {
-  raycaster.setFromCamera(pointer, camera);
+  // Check for intersections with the station model
   const intersects = raycaster.intersectObject(stationModel, true);
-  console.log(intersects);
+  console.log("Station model position ", stationModel.position);
+
+  const worldPosition = new THREE.Vector3();
+  stationModel.getWorldPosition(worldPosition);
+
+  console.log("Station model clicked! World position:", worldPosition);
 
   if (intersects.length > 0) {
-		intersects[0].object.material.color.set( 0xff0000 );
-    console.log('Object clicked:', intersects[0].object);
+    gsap.to(camera.position, {
+      x: worldPosition.x + 7,
+      y: worldPosition.y,
+      z: worldPosition.z + 1,
+      duration: 2,
+      ease: "power2.inOut",
+      // onComplete: () => {
+      //   // Open a new web page after the animation completes
+      //   window.location.href = "test.html"; // Replace with your desired URL
+      // },
+    });
   }
-});
+}
+
+// Add click event listener
+window.addEventListener('click', onMouseClick, false);
 
 function animate() {
   requestAnimationFrame(animate);
-
-  raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObject(stationModel, true);
-
-  if (intersects.length > 0) {
-    console.log('Hovering over object');
-  }
 
   controls.update();
   renderer.render(scene, camera);
