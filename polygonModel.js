@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gsap } from 'gsap';
 import { TextureLoader } from 'three';
 import { AlienStation } from './assets/models/alienStation';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
 const scene = new THREE.Scene();
 const texture = new THREE.TextureLoader().load('assets/milkyWay.jpg');
@@ -20,7 +21,15 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const controls = new OrbitControls( camera, renderer.domElement );
+// CSS3D Renderer for HTML content
+const css3DRenderer = new CSS3DRenderer();
+css3DRenderer.setSize(window.innerWidth, window.innerHeight);
+css3DRenderer.domElement.style.position = 'absolute';
+css3DRenderer.domElement.style.top = '0';
+css3DRenderer.domElement.style.pointerEvents = 'none'; // Allow clicks to pass through
+document.body.appendChild(css3DRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.update();
 
 const loader = new GLTFLoader();
@@ -28,8 +37,8 @@ const alienStation = new AlienStation(scene);
 const stationModel = alienStation.getModel();
 let planetGroup = new THREE.Group();
 scene.add(planetGroup);
-let planet
-let boxHelper;
+let planet;
+
 loader.load(
   "assets/Jupiter.glb",
   function (gltf) {
@@ -41,11 +50,8 @@ loader.load(
 
     stationModel.scale.set(0.3, 0.3, 0.3);
     stationModel.rotateZ(-1.5);
-    stationModel.position.set(10*Math.cos(0), 10*Math.sin(0), 0.5)
+    stationModel.position.set(10 * Math.cos(0), 10 * Math.sin(0), 0.5);
     planetGroup.add(stationModel);
-
-    boxHelper = new THREE.BoxHelper(stationModel);
-    scene.add(boxHelper);
 
     console.log("GLB Model Loaded!", planet);
   },
@@ -56,7 +62,6 @@ loader.load(
     console.error("Error loading GLB:", error);
   }
 );
-
 
 const light = new THREE.PointLight(0xffffff, 1.5);
 light.position.set(10, 10, 10);
@@ -73,7 +78,7 @@ scene.add(lightHelper, gridHelper);
 
 function addStar() {
   const star = new THREE.Mesh(
-    new THREE.SphereGeometry(0.25, 24, 24), 
+    new THREE.SphereGeometry(0.25, 24, 24),
     new THREE.MeshStandardMaterial({ color: 0xffffff })
   );
 
@@ -103,6 +108,29 @@ document.addEventListener("keydown", (event) => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// Create a hologram plane
+function createHologram() {
+  const hologramDiv = document.createElement('div');
+  hologramDiv.style.width = '300px';
+  hologramDiv.style.height = '200px';
+  hologramDiv.style.backgroundColor = 'rgba(0, 255, 255, 0.5)';
+  hologramDiv.style.border = '2px solid cyan';
+  hologramDiv.style.color = 'white';
+  hologramDiv.style.textAlign = 'center';
+  hologramDiv.style.padding = '20px';
+  hologramDiv.style.boxSizing = 'border-box';
+  hologramDiv.innerHTML = `
+    <h2>About Me</h2>
+    <p>This is a hologram displaying HTML content!</p>
+  `;
+
+  const hologramObject = new CSS3DObject(hologramDiv);
+  hologramObject.scale.set(0.02, 0.02, 0.02); // Scale down the hologram
+  return hologramObject;
+}
+
+let hologram;
+
 function onMouseClick(event) {
   // Convert mouse position to normalized device coordinates (-1 to +1)
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -113,24 +141,43 @@ function onMouseClick(event) {
 
   // Check for intersections with the station model
   const intersects = raycaster.intersectObject(stationModel, true);
-  console.log("Station model position ", stationModel.position);
-
-  const worldPosition = new THREE.Vector3();
-  stationModel.getWorldPosition(worldPosition);
-
-  console.log("Station model clicked! World position:", worldPosition);
 
   if (intersects.length > 0) {
+    // Get the station model's world position
+    const worldPosition = new THREE.Vector3();
+    stationModel.getWorldPosition(worldPosition);
+
+    console.log("Station model clicked! World position:", worldPosition);
+
+    // Disable controls during the animation
+    controls.enabled = false;
+
+    // Zoom into the station model
     gsap.to(camera.position, {
       x: worldPosition.x + 7,
       y: worldPosition.y,
       z: worldPosition.z + 1,
       duration: 2,
       ease: "power2.inOut",
-      // onComplete: () => {
-      //   // Open a new web page after the animation completes
-      //   window.location.href = "test.html"; // Replace with your desired URL
-      // },
+      onComplete: () => {
+        // Create and display the hologram in front of the camera
+        hologram = createHologram();
+
+        // Position the hologram in front of the camera
+        const distanceFromCamera = 5; // Distance in front of the camera
+        const hologramPosition = new THREE.Vector3();
+        camera.getWorldDirection(hologramPosition); // Get the camera's forward direction
+        hologramPosition.multiplyScalar(distanceFromCamera).add(camera.position); // Move in front of the camera
+        hologram.position.copy(hologramPosition);
+
+        // Rotate the hologram to face the camera
+        hologram.lookAt(camera.position);
+
+        scene.add(hologram);
+
+        // Re-enable controls
+        controls.enabled = true;
+      },
     });
   }
 }
@@ -143,6 +190,7 @@ function animate() {
 
   controls.update();
   renderer.render(scene, camera);
+  css3DRenderer.render(scene, camera); // Render the CSS3D content
 }
 
 animate();
