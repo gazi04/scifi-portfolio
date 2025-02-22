@@ -9,6 +9,7 @@ class Jupiter {
     this.scene = scene;
     this.camera = camera;
     this.planetGroup = new THREE.Group();
+    this.isHologramMode = false;
     this.createAndDisplayModel();
   }
 
@@ -44,6 +45,8 @@ class Jupiter {
   }
 
   spin(event) {
+    if (this.isHologramMode) return;
+
     let rotationAmount = Math.PI / 8;
 
     switch (event.code) {
@@ -71,7 +74,27 @@ class Jupiter {
     hologramDiv.style.backfaceVisibility = 'hidden';
     hologramDiv.style.transformStyle = 'preserve-3d';
 
+    hologramDiv.style.pointerEvents = 'auto';
+
+    const closeButton = document.createElement('button');
+    closeButton.innerText = 'Close';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '10px';
+    closeButton.style.right = '10px';
+    closeButton.style.padding = '5px 10px';
+    closeButton.style.backgroundColor = 'cyan';
+    closeButton.style.border = 'none';
+    closeButton.style.color = 'white';
+    closeButton.style.cursor = 'pointer';
+    closeButton.onclick = () => {
+      this.scene.remove(this.hologram);
+      this.isHologramMode = false;
+      this.controls.enabled = true;
+      console.log('Hologram closed');
+    };
+
     hologramDiv.innerHTML = await this.loadHologramContent();
+    hologramDiv.appendChild(closeButton);
 
     if (!document.querySelector("link[href='/assets/css/hologram.css']")) {
       const link = document.createElement('link');
@@ -86,6 +109,8 @@ class Jupiter {
   }
 
   clickStationEvent(event, controls) {
+    if (this.isHologramMode) return;
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -101,6 +126,8 @@ class Jupiter {
       this.stationModel.getWorldPosition(worldPosition);
 
       controls.enabled = false;
+      this.controls = controls;
+      this.isHologramMode = true;
 
       gsap.to(this.camera.position, {
         x: worldPosition.x + 7,
@@ -109,19 +136,17 @@ class Jupiter {
         duration: 2,
         ease: "power2.inOut",
         onComplete: async () => {
-          const hologram = await this.createHologram();
+          this.hologram = await this.createHologram();
 
           const distanceFromCamera = 3;
           const hologramPosition = new THREE.Vector3();
           this.camera.getWorldDirection(hologramPosition);
           hologramPosition.multiplyScalar(distanceFromCamera).add(this.camera.position);
-          hologram.position.copy(hologramPosition);
+          this.hologram.position.copy(hologramPosition);
 
-          hologram.lookAt(this.camera.position);
+          this.hologram.lookAt(this.camera.position);
 
-          this.scene.add(hologram);
-
-          controls.enabled = true;
+          this.scene.add(this.hologram);
         },
       });
     }

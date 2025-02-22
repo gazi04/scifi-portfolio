@@ -49,7 +49,7 @@ class SceneManager {
     this.css3DRenderer.setSize(window.innerWidth, window.innerHeight);
     this.css3DRenderer.domElement.style.position = 'absolute';
     this.css3DRenderer.domElement.style.top = '0';
-    this.css3DRenderer.domElement.style.pointerEvents = 'none'; // Allow clicks to pass through
+    this.css3DRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild(this.css3DRenderer.domElement);
   }
 
@@ -85,7 +85,6 @@ class SceneManager {
 
     document.addEventListener("click", (event) => {
       this.jupiter.clickStationEvent(event, this.controls);
-      this.controls.enabled = true;
     }, false);
   }
 
