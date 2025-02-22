@@ -66,6 +66,10 @@ class Jupiter {
   async createHologram() {
     const hologramDiv = document.createElement('div');
     hologramDiv.id = 'hologram-content';
+    hologramDiv.style.fontSmoothing = 'antialiased';
+    hologramDiv.style.webkitFontSmoothing = 'antialiased';
+    hologramDiv.style.backfaceVisibility = 'hidden';
+    hologramDiv.style.transformStyle = 'preserve-3d';
 
     hologramDiv.innerHTML = await this.loadHologramContent();
 
@@ -77,7 +81,7 @@ class Jupiter {
     }
 
     const hologramObject = new CSS3DObject(hologramDiv);
-    hologramObject.scale.set(0.02, 0.02, 0.02);
+    hologramObject.scale.set(0.01, 0.01, 0.01);
     return hologramObject;
   }
 
@@ -85,25 +89,19 @@ class Jupiter {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // Convert mouse position to normalized device coordinates (-1 to +1)
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // Update the raycaster with the camera and mouse position
     raycaster.setFromCamera(mouse, this.camera);
 
-    // Check for intersections with the station model
     const intersects = raycaster.intersectObject(this.stationModel, true);
 
     if (intersects.length > 0) {
-      // Get the station model's world position
       const worldPosition = new THREE.Vector3();
       this.stationModel.getWorldPosition(worldPosition);
 
-      // Disable controls during the animation
       controls.enabled = false;
 
-      // Zoom into the station model
       gsap.to(this.camera.position, {
         x: worldPosition.x + 7,
         y: worldPosition.y,
@@ -111,22 +109,18 @@ class Jupiter {
         duration: 2,
         ease: "power2.inOut",
         onComplete: async () => {
-          // Create and display the hologram in front of the camera
           const hologram = await this.createHologram();
 
-          // Position the hologram in front of the camera
-          const distanceFromCamera = 3; // Distance in front of the camera
+          const distanceFromCamera = 3;
           const hologramPosition = new THREE.Vector3();
-          this.camera.getWorldDirection(hologramPosition); // Get the camera's forward direction
-          hologramPosition.multiplyScalar(distanceFromCamera).add(this.camera.position); // Move in front of the camera
+          this.camera.getWorldDirection(hologramPosition);
+          hologramPosition.multiplyScalar(distanceFromCamera).add(this.camera.position);
           hologram.position.copy(hologramPosition);
 
-          // Rotate the hologram to face the camera
           hologram.lookAt(this.camera.position);
 
           this.scene.add(hologram);
 
-          // Re-enable controls
           controls.enabled = true;
         },
       });
