@@ -1,16 +1,66 @@
-.hologram {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  padding: 20px;
-  text-align: center;
-  background: rgba(0, 255, 255, 0.2); /* Futuristic cyan */
-  border: 2px solid cyan;
-  box-shadow: 0 0 15px cyan;
-  font-family: 'Orbitron', sans-serif;
+body { 
+  margin: 0; 
+  background: radial-gradient(circle, #000428, #004e92);
   color: white;
-  opacity: 0; /* Initially hidden */
-  transition: opacity 0.5s ease-in-out;
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
 }
+
+#hologram-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+#hologram-content {
+  width: 800px;
+  height: 600px;
+  background-color: rgba(0, 255, 255, 0.1);
+  border: 2px solid cyan;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  pointer-events: auto;
+  position: relative;
+  animation: hologram-effect 3s infinite;
+}
+
+@keyframes hologram-effect {
+0%, 100% {
+  box-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px cyan;
+}
+50% {
+  box-shadow: 0 0 20px cyan, 0 0 40px cyan, 0 0 60px cyan;
+}
+}
+
+#close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: cyan;
+  border: none;
+  color: black;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#close-button:hover {
+  background-color: #00ffff;
+}
+
+h2, p {
+  text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+}
+

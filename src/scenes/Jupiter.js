@@ -7,6 +7,7 @@ class Jupiter {
   constructor(scene, camera) {
     this.scene = scene;
     this.camera = camera;
+    this.originalCameraPosition = this.camera.position.clone();
     this.planetGroup = new THREE.Group();
     this.isHologramMode = false;
     this.hologramOverlay = document.getElementById('hologram-overlay');
@@ -30,8 +31,6 @@ class Jupiter {
         this.stationModel.rotateZ(-1.5);
         this.stationModel.position.set(10 * Math.cos(0), 10 * Math.sin(0), 0.5);
         this.planetGroup.add(this.stationModel);
-
-        console.log("GLB Model Loaded!", planet);
       },
       (xhr) => {
         console.log(`Loading: ${(xhr.loaded / xhr.total) * 100}%`);
@@ -81,11 +80,12 @@ class Jupiter {
     closeButton.style.border = 'none';
     closeButton.style.color = 'white';
     closeButton.style.cursor = 'pointer';
+    
     closeButton.onclick = () => {
       this.hologramOverlay.style.display = 'none';
       this.isHologramMode = false;
       this.controls.enabled = true;
-      console.log('Hologram closed');
+      this.#setCameraToOriginalPosition();
     };
 
     hologramContent.appendChild(closeButton);
@@ -129,6 +129,16 @@ class Jupiter {
 
   getModel() {
     return this.planetGroup;
+  }
+
+  #setCameraToOriginalPosition() {
+    gsap.to(this.camera.position, {
+      x: this.originalCameraPosition.x,
+      y: this.originalCameraPosition.y,
+      z: this.originalCameraPosition.z,
+      duration: 2,
+      ease: "power2.inOut",
+    });
   }
 }
 
