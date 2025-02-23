@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { gsap } from 'gsap';
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { AlienStation } from '../objects/AlienStation';
 
 class Jupiter {
@@ -10,6 +9,7 @@ class Jupiter {
     this.camera = camera;
     this.planetGroup = new THREE.Group();
     this.isHologramMode = false;
+    this.hologramOverlay = document.getElementById('hologram-overlay');
     this.createAndDisplayModel();
   }
 
@@ -67,16 +67,11 @@ class Jupiter {
   }
 
   async createHologram() {
-    const hologramDiv = document.createElement('div');
-    hologramDiv.id = 'hologram-content';
-    hologramDiv.style.fontSmoothing = 'antialiased';
-    hologramDiv.style.webkitFontSmoothing = 'antialiased';
-    hologramDiv.style.backfaceVisibility = 'hidden';
-    hologramDiv.style.transformStyle = 'preserve-3d';
-
-    hologramDiv.style.pointerEvents = 'auto';
+    const hologramContent = document.getElementById('hologram-content');
+    hologramContent.innerHTML = await this.loadHologramContent();
 
     const closeButton = document.createElement('button');
+    closeButton.id = 'close-button';
     closeButton.innerText = 'Close';
     closeButton.style.position = 'absolute';
     closeButton.style.top = '10px';
@@ -87,25 +82,15 @@ class Jupiter {
     closeButton.style.color = 'white';
     closeButton.style.cursor = 'pointer';
     closeButton.onclick = () => {
-      this.scene.remove(this.hologram);
+      this.hologramOverlay.style.display = 'none';
       this.isHologramMode = false;
       this.controls.enabled = true;
       console.log('Hologram closed');
     };
 
-    hologramDiv.innerHTML = await this.loadHologramContent();
-    hologramDiv.appendChild(closeButton);
+    hologramContent.appendChild(closeButton);
 
-    if (!document.querySelector("link[href='/assets/css/hologram.css']")) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/assets/css/hologram.css';
-      document.head.appendChild(link);
-    }
-
-    const hologramObject = new CSS3DObject(hologramDiv);
-    hologramObject.scale.set(0.01, 0.01, 0.01);
-    return hologramObject;
+    this.hologramOverlay.style.display = 'flex';
   }
 
   clickStationEvent(event, controls) {
@@ -136,17 +121,7 @@ class Jupiter {
         duration: 2,
         ease: "power2.inOut",
         onComplete: async () => {
-          this.hologram = await this.createHologram();
-
-          const distanceFromCamera = 3;
-          const hologramPosition = new THREE.Vector3();
-          this.camera.getWorldDirection(hologramPosition);
-          hologramPosition.multiplyScalar(distanceFromCamera).add(this.camera.position);
-          this.hologram.position.copy(hologramPosition);
-
-          this.hologram.lookAt(this.camera.position);
-
-          this.scene.add(this.hologram);
+          await this.createHologram();
         },
       });
     }
