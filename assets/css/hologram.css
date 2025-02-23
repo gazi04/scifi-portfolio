@@ -1,8 +1,9 @@
+/* Hologram Container */
 #hologram-content {
   width: 600px;
   height: 400px;
-  background-color: rgba(0, 255, 255, 0.5);
-  border: 2px solid cyan;
+  background-color: rgba(0, 255, 255, 0.05); /* More transparent */
+  border: 2px solid rgba(0, 255, 255, 0.8); /* Glowing border */
   color: white;
   text-align: center;
   padding: 20px;
@@ -11,12 +12,59 @@
   overflow-y: auto;
   pointer-events: auto;
   z-index: 1000;
+  animation: hologram-effect 3s infinite, hologram-flicker 0.1s infinite;
+  backdrop-filter: blur(5px); /* Blurred background for depth */
+  border-radius: 10px; /* Rounded corners */
 }
 
-#hologram-content * {
-  pointer-events: auto; /* Force all child elements to be interactive */
+/* Hologram Glow Effect */
+@keyframes hologram-effect {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
+                0 0 20px rgba(0, 255, 255, 0.6),
+                0 0 30px rgba(0, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 1),
+                0 0 40px rgba(0, 255, 255, 0.8),
+                0 0 60px rgba(0, 255, 255, 0.6);
+  }
 }
 
+/* Hologram Flicker Effect */
+@keyframes hologram-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9; /* Slight flicker */
+  }
+}
+
+/* Hologram Content Styling */
+#hologram-content h2 {
+  font-size: 24px;
+  text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+  animation: text-glow 2s infinite alternate;
+}
+
+#hologram-content p {
+  font-size: 16px;
+  text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+  animation: text-glow 2s infinite alternate;
+}
+
+/* Text Glow Animation */
+@keyframes text-glow {
+  0% {
+    text-shadow: 0 0 5px cyan, 0 0 10px cyan;
+  }
+  100% {
+    text-shadow: 0 0 10px cyan, 0 0 20px cyan;
+  }
+}
+
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -26,4 +74,35 @@
 ::-webkit-scrollbar-thumb {
   background: cyan;
   border-radius: 5px;
+  box-shadow: 0 0 5px cyan, 0 0 10px cyan;
+}
+
+/* Close Button Styling */
+#close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: rgba(0, 255, 255, 0.8);
+  border: none;
+  color: black;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 5px;
+  animation: button-glow 2s infinite alternate;
+}
+
+#close-button:hover {
+  background-color: rgba(0, 255, 255, 1);
+  box-shadow: 0 0 10px cyan, 0 0 20px cyan;
+}
+
+/* Button Glow Animation */
+@keyframes button-glow {
+  0% {
+    box-shadow: 0 0 5px cyan, 0 0 10px cyan;
+  }
+  100% {
+    box-shadow: 0 0 10px cyan, 0 0 20px cyan;
+  }
 }
