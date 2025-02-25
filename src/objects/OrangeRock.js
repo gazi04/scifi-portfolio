@@ -57,7 +57,6 @@ class OrangeRock {
     rock.position.set(x, y, z);
     rock.scale.set(0.4, 0.4, 0.4);
     planet.add(rock);
-    console.log(rock.position);
 
     // this.load(2)
     // const rock2 = this.getModel();
@@ -88,6 +87,16 @@ class OrangeRock {
     // rock3.position.set(x, y, z);
     // rock3.scale.set(0.4, 0.4, 0.4);
     // planet.add(rock3);
+  }
+
+  changePosition(theta, phi) {
+    const radius = 9.5;
+
+    const x = radius * Math.sin(theta) * Math.cos(phi);
+    const y = radius * Math.sin(theta) * Math.sin(phi);
+    const z = radius * Math.cos(theta);
+
+    this.getModel().position.set(x, y, z);
   }
 
   getModel() { return this.object; }

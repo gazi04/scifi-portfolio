@@ -2,14 +2,16 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import Jupiter from './scenes/Jupiter';
+import Sun from './scenes/Sun';
 
 class SceneManager {
   constructor() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.x = 20;
-    this.camera.position.y = 5;
-    this.camera.position.z = 10;
+    this.camera.position.set(82, 75, 78);
+    // this.camera.position.x = 20;
+    // this.camera.position.y = 5;
+    // this.camera.position.z = 10;
     this.renderer = new THREE.WebGLRenderer();
 
     this.setupRenderer();
@@ -36,7 +38,7 @@ class SceneManager {
     this.scene.add(directionalLight);
 
     const lightHelper = new THREE.PointLightHelper(directionalLight);
-    const gridHelper = new THREE.GridHelper(200, 50);
+    const gridHelper = new THREE.GridHelper(400, 100);
     this.scene.add(lightHelper, gridHelper);
   }
 
@@ -58,11 +60,16 @@ class SceneManager {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     this.scene.background = texture;
-    [...Array(200)].forEach(() => this.addStar());
+    [...Array(800)].forEach(() => this.addStar());
   }
 
   addPlanets() {
+    const radius = 40;
+
     this.jupiter = new Jupiter(this.scene, this.camera);
+    this.jupiter.changePositionX(radius);
+    this.sun = new Sun(this.scene, this.camera);
+    this.jupiter.animaterOrbit(radius);
   }
 
   addStar() {
@@ -71,12 +78,13 @@ class SceneManager {
       new THREE.MeshStandardMaterial({ color: 0xffffff })
     );
 
-    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(100));
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(400));
     star.position.set(x, y, z);
     this.scene.add(star);
   }
 
   setupEventListeners() {
+    // TODO- THE EVENT SHOULD CHANGE BASED ON WHICH PLANET IS FOCUSED 
     document.addEventListener("keydown", (event) => {
       if (this.jupiter) {
         this.jupiter.spin(event);
@@ -89,6 +97,7 @@ class SceneManager {
   }
 
   animate() {
+    this.sun.getModel().rotation.y += 0.007;
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.renderer.render(this.scene, this.camera);

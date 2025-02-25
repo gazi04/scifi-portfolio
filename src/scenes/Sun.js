@@ -2,11 +2,16 @@ import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 class Sun { 
-  constructor() {
-    this.model = new THREE.Object3D;
+  constructor(scene, camera) {
+    this.scene = scene;
+    this.camera = camera;
+    this.originalCameraPosition = this.camera.position.clone();
+    this.model = new THREE.Group;
+
+    this.display();
   }
 
-  load() {
+  #load() {
     const loader = new GLTFLoader();
 
     loader.load(
@@ -22,6 +27,13 @@ class Sun {
         console.error("Error loading GLB:", error);
       }
     );
+  }
+
+  display() {
+    this.#load();
+    this.model.position.set(0, 0, 0);
+    this.model.scale.set(8, 8, 8);
+    this.scene.add(this.model);
   }
 
   getModel() { return this.model; }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class AlienStation {
+class AlienStation {
   constructor(scene) {
     this.scene = scene;
     this.stationGroup = new THREE.Group();
@@ -65,3 +65,5 @@ export class AlienStation {
     return this.stationGroup;
   }
 }
+
+export default AlienStation;
